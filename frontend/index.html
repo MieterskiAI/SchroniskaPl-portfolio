@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Schroniska PL</h1>
+<input id="postal" placeholder="00-001">
+<button onclick="search()">Szukaj</button>
+<pre id="out"></pre>
+<script>
+async function search() {
+  const postal = document.getElementById("postal").value;
+  const r = await fetch("/api/shelters?postal=" + postal);
+  const data = await r.json();
+  document.getElementById("out").textContent = JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html>
