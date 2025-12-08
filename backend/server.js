@@ -7,6 +7,7 @@ const path = require("path");
 
 // Ścieżka do pliku z danymi
 const dataPath = path.join(__dirname, "..", "data", "shelters.json");
+const JSON_HEADERS = { "Content-Type": "application/json; charset=utf-8" };
 
 // Helper: wczytanie danych z pliku
 function loadShelters() {
@@ -52,36 +53,10 @@ const server = http.createServer((req, res) => {
   // GET /api/shelters -> lista wszystkich schronisk
   if (req.method === "GET" && url.pathname === "/api/shelters") {
     const shelters = loadShelters();
-    res.writeHead(200, { "Content-Type": "application/json" });
+    res.writeHead(200, JSON_HEADERS);
     res.end(JSON.stringify(shelters));
     return;
   }
 
   // GET /api/shelters/:id -> jedno schronisko po ID
-  if (req.method === "GET" && url.pathname.startsWith("/api/shelters/")) {
-    const id = url.pathname.split("/").pop();
-    const shelters = loadShelters();
-    const shelter = shelters.find((s) => s.id === id);
-
-    if (!shelter) {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Shelter not found" }));
-      return;
-    }
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(shelter));
-    return;
-  }
-
-  // Fallback: 404
-  res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ error: "Not found" }));
-});
-
-// Domyślny port
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, () => {
-  console.log(`Schroniska PL API is running on http://localhost:${PORT}`);
-});
+  if (req.method === "GET" && url.pathname.star
