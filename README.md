@@ -1,42 +1,53 @@
-## 🛠️ Tech Stack  
-**Frontend:** HTML / CSS / JavaScript  
-**Backend:** Node.js (native HTTP module, simple REST API)  
-**Data:** JSON (hierarchical structure: voivodeship → county → municipality → shelter)  
-**AI Logic:** ChatGPT (custom GPT & prompt engineering)  
-**Other:** Git, GitHub, MIT License  
+# 🐾 Schroniska PL — Open-Source Project
+Open-source application for locating animal shelters in Poland, built with a simple Node.js REST API and a hierarchical JSON data structure.
+
+## 🛠️ Tech Stack
+Frontend: HTML / CSS / JavaScript  
+Backend: Node.js (native HTTP module, simple REST API)  
+Data: JSON (hierarchical structure: voivodeship → county → municipality → shelter)  
+AI Logic: ChatGPT (custom GPT & prompt engineering)  
+Other: Git, GitHub, MIT License
+
 ## 🌐 REST API Endpoints
+GET /api/shelters  
+Returns a flat list of all shelters with region metadata.
 
-The backend exposes a very simple REST API:
+GET /api/shelters/:id  
+Returns a single shelter by its id (e.g., krk-1).
 
-- `GET /api/shelters` – returns a flat list of all shelters with region metadata  
-- `GET /api/shelters/:id` – returns a single shelter by its `id` (e.g. `krk-1`)  
+The API reads and flattens hierarchical data from data/shelters.json.
 
-This API is powered by a minimal Node.js HTTP server reading from `data/shelters.json`.
 ## 🗺 Data Model & Diagram
+Shelter data is stored using a hierarchical structure:
+Voivodeship → County → Municipality → Shelter.
 
-The shelter data is stored in a hierarchical structure:
+Example (from data/shelters.json):
+Malopolskie → Krakow → Krakow → Schronisko dla Bezdomnych Zwierzat w Krakowie (id: krk-1).
 
-- Voivodeship → County → Municipality → Shelter
-
-Example (from `data/shelters.json`):
-
-- Małopolskie → Kraków → Kraków → Schronisko dla Bezdomnych Zwierząt w Krakowie (`id: krk-1`)
-
-You can view the full data model diagram here:
-
-[View Whimsical diagram](https://whimsical.com/schroniska-pl-data-model-3mqBXmW3VFmNsFm69EkKYb@5QtYEQ3Nz4jB5ZcJh)
+Full data model diagram:  
+https://whimsical.com/schroniska-pl-data-model-3mqBXmW3VFmNsFm69EkKYb@5QtYEQ3Nz4jB5ZcJh
 
 ## ▶️ Run the Backend
-
 To start the API locally:
-
-```bash
 node backend/server.js
+
+Backend available at:  
 http://localhost:3001
+
 ## 📸 Screenshots
+API — list of shelters  
+API — single shelter
 
-### API — list of shelters
-![Shelters list](assets/api-shelters.png)
+## 📄 License
+This project is released under the MIT License.
 
-### API — single shelter
-![Single shelter](assets/api-list.png)
+## 🙌 About the Project
+Schroniska PL is an open-source initiative designed to organize and expose animal shelter data in Poland via a simple REST API.
+
+Planned extensions include:
+- AI-assisted lost-pet reporting
+- Automated data validation
+- Geographic grouping and filtering
+- Integration with external shelter APIs
+
+Project created and maintained by MieterskiAI.
