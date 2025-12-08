@@ -59,4 +59,30 @@ const server = http.createServer((req, res) => {
   }
 
   // GET /api/shelters/:id -> jedno schronisko po ID
-  if (req.method === "GET" && url.pathname.star
+  if (req.method === "GET" && url.pathname.startsWith("/api/shelters/")) {
+    const id = url.pathname.split("/").pop();
+    const shelters = loadShelters();
+    const shelter = shelters.find((s) => s.id === id);
+
+    if (!shelter) {
+      res.writeHead(404, JSON_HEADERS);
+      res.end(JSON.stringify({ error: "Shelter not found" }));
+      return;
+    }
+
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify(shelter));
+    return;
+  }
+
+  // Fallback: 404
+  res.writeHead(404, JSON_HEADERS);
+  res.end(JSON.stringify({ error: "Not found" }));
+});
+
+// Domyślny port
+const PORT = process.env.PORT || 3001;
+
+server.listen(PORT, () => {
+  console.log(`Schroniska PL API is running on http://localhost:${PORT}`);
+});
