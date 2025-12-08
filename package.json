@@ -1,4 +1,13 @@
 {
+  "name": "schroniska-pl",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Open-source application for locating animal shelters in Poland (portfolio project).",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "import:csv": "node backend/importCsv.js"
+  },
   "dependencies": {
     "csv-parser": "^3.2.0",
     "express": "^5.2.1",
@@ -6,3 +15,4 @@
     "uuid": "^13.0.0"
   }
 }
+
