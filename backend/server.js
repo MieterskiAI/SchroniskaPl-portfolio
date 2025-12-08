@@ -1,28 +1,24 @@
 // backend/server.js
-// Proste REST API do serwowania danych schronisk z pliku JSON
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const app = express();
+const PORT = 3000;
 
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+// Wczytujemy shelters.json (drzewo województwo → powiat → gmina → schroniska)
+const dataFile = path.join(__dirname, '..', 'data', 'shelters.json');
+let tree = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 
-// Ścieżka do pliku z danymi
-const dataPath = path.join(__dirname, "..", "data", "shelters.json");
-const JSON_HEADERS = { "Content-Type": "application/json; charset=utf-8" };
+// Flatten — zamienia całe drzewo na jedną tablicę schronisk
+function flattenShelters(tree) {
+  const result = [];
 
-// Helper: wczytanie danych z pliku
-function loadShelters() {
-  const raw = fs.readFileSync(dataPath, "utf-8");
-  const json = JSON.parse(raw);
-
-  // Spłaszczamy strukturę do listy schronisk z pełną ścieżką geograficzną
-  const shelters = [];
-
-  for (const v of json.voivodeships) {
+  for (const v of tree.voivodeships) {
     for (const c of v.counties) {
       for (const m of c.municipalities) {
-        for (const s of m.shelters) {
-          shelters.push({
-            ...s,
+        for (const sh of m.shelters) {
+          result.push({
+            ...sh,
             voivodeship: v.name,
             county: c.name,
             municipality: m.name
@@ -32,57 +28,76 @@ function loadShelters() {
     }
   }
 
-  return shelters;
+  return result;
 }
 
-// REST API
-const server = http.createServer((req, res) => {
-  // Prosty CORS (żeby frontend mógł się łączyć)
+const shelters = flattenShelters(tree);
+
+// CORS + JSON
+app.use(express.json());
+app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
-  const url = new URL(req.url, `http://${req.headers.host}`);
-
-  // GET /api/shelters -> lista wszystkich schronisk
-  if (req.method === "GET" && url.pathname === "/api/shelters") {
-    const shelters = loadShelters();
-    res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify(shelters));
-    return;
-  }
-
-  // GET /api/shelters/:id -> jedno schronisko po ID
-  if (req.method === "GET" && url.pathname.startsWith("/api/shelters/")) {
-    const id = url.pathname.split("/").pop();
-    const shelters = loadShelters();
-    const shelter = shelters.find((s) => s.id === id);
-
-    if (!shelter) {
-      res.writeHead(404, JSON_HEADERS);
-      res.end(JSON.stringify({ error: "Shelter not found" }));
-      return;
-    }
-
-    res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify(shelter));
-    return;
-  }
-
-  // Fallback: 404
-  res.writeHead(404, JSON_HEADERS);
-  res.end(JSON.stringify({ error: "Not found" }));
+  next();
 });
 
-// Domyślny port
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, () => {
-  console.log(`Schroniska PL API is running on http://localhost:${PORT}`);
+// ROOT
+app.get('/', (req, res) => {
+  res.send('SchroniskaPL API działa! 🚀');
 });
+
+// 1. Zwraca CAŁE drzewo
+app.get('/api/tree', (req, res) => {
+  res.json(tree);
+});
+
+// 2. Lista WSZYSTKICH schronisk (flatten)
+app.get('/api/shelters', (req, res) => {
+  res.json(shelters);
+});
+
+// 3. Pojedyncze schronisko po ID
+app.get('/api/shelters/:id', (req, res) => {
+  const sh = shelters.find(s => s.id === req.params.id);
+  if (!sh) return res.status(404).json({ error: "Nie znaleziono schroniska" });
+  res.json(sh);
+});
+
+// 4. Wyszukiwanie po mieście / kodzie pocztowym
+app.get('/api/search', (req, res) => {
+  const { city, postal } = req.query;
+
+  let results = shelters;
+
+  if (city) {
+    results = results.filter(s => s.city.toLowerCase().includes(city.toLowerCase()));
+  }
+
+  if (postal) {
+    results = results.filter(s => s.postalCode.startsWith(postal));
+  }
+
+  res.json(results);
+});
+
+// 5. Najbliższe schronisko od współrzędnych ?lat=...&lng=...
+app.get('/api/nearest', (req, res) => {
+  const { lat, lng } = req.query;
+  if (!lat || !lng) return res.status(400).json({ error: "Podaj lat i lng" });
+
+  function dist(a, b) {
+    return Math.sqrt((a.lat - b.lat) ** 2 + (a.lng - b.lng) ** 2);
+  }
+
+  const withLocation = shelters.filter(s => s.location && s.location.lat);
+  const nearest = withLocation.reduce((best, sh) => {
+    const d = dist({ lat: +lat, lng: +lng }, sh.location);
+    return !best || d < best.dist ? { sh, dist: d } : best;
+  }, null);
+
+  res.json(nearest ? nearest.sh : { error: "Brak schronisk z lokalizacją" });
+});
+
+app.listen(PORT, () =>
+  console.log(`🔥 SchroniskaPL API działa na http://localhost:${PORT}`)
+);
+

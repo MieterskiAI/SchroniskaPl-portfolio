@@ -1,10 +1,7 @@
-// backend/importCsv.js
-// Robust CSV importer: normalization, dedupe, UUID ids, safe _source
-
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 const { parsePhoneNumberFromString } = require('libphonenumber-js');
 
 if (!process.argv[2]) {
@@ -120,7 +117,7 @@ fs.createReadStream(inputPath)
       const normalizedVoiv = canonicalVoivode(voiv);
 
       const shelter = {
-        id: row.id && row.id.trim() ? row.id.trim() : uuidv4(),
+id: row.id && row.id.trim() ? row.id.trim() : randomUUID(),
         name: normalizeStr(name),
         address: normalizeStr(address),
         postalCode: normalizedPostal,
