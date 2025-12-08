@@ -32,6 +32,118 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Mazowieckie",
+      "code": "",
+      "counties": [
+        {
+          "name": "Warszawa",
+          "municipalities": [
+            {
+              "name": "Warszawa",
+              "shelters": [
+                {
+                  "id": "1",
+                  "name": "Schronisko dla Zwierząt w Warszawie",
+                  "address": "Paluch",
+                  "postalCode": "02-147",
+                  "voivodeship": "Mazowieckie",
+                  "county": "Warszawa",
+                  "municipality": "Warszawa",
+                  "phone": "+48228461199",
+                  "email": "biuro@paluch.org.pl",
+                  "website": "https://paluch.org.pl",
+                  "location": null,
+                  "_importedAt": "2025-12-08T13:34:47.630Z",
+                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska_demo.csv"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Unknown",
+          "municipalities": [
+            {
+              "name": "Unknown",
+              "shelters": [
+                {
+                  "id": "1",
+                  "name": "Schronisko w Warszawie",
+                  "address": "ul. Paluch 2",
+                  "postalCode": "02-147",
+                  "voivodeship": "Mazowieckie",
+                  "phone": "22 868 06 34",
+                  "email": "kontakt@paluch.pl",
+                  "location": null,
+                  "_importedAt": "2025-12-08T13:36:48.571Z",
+                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska.csv"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Małopolskie",
+      "code": "",
+      "counties": [
+        {
+          "name": "Kraków",
+          "municipalities": [
+            {
+              "name": "Kraków",
+              "shelters": [
+                {
+                  "id": "2",
+                  "name": "Schronisko w Krakowie",
+                  "address": "Rybna",
+                  "postalCode": "30-001",
+                  "voivodeship": "Małopolskie",
+                  "county": "Kraków",
+                  "municipality": "Kraków",
+                  "phone": "+48123456789",
+                  "email": "biuro@schroniskokrakow.pl",
+                  "website": "https://schroniskokrakow.pl",
+                  "location": null,
+                  "_importedAt": "2025-12-08T13:34:47.630Z",
+                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska_demo.csv"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Wielkopolskie",
+      "code": "",
+      "counties": [
+        {
+          "name": "Unknown",
+          "municipalities": [
+            {
+              "name": "Unknown",
+              "shelters": [
+                {
+                  "id": "2",
+                  "name": "Schronisko w Poznaniu",
+                  "address": "ul. Kobylepole 23",
+                  "postalCode": "61-312",
+                  "voivodeship": "Wielkopolskie",
+                  "phone": "61 879 84 27",
+                  "email": "info@poznan.schronisko.pl",
+                  "location": null,
+                  "_importedAt": "2025-12-08T13:36:48.571Z",
+                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska.csv"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -26,7 +26,15 @@ Malopolskie → Krakow → Krakow → Schronisko dla Bezdomnych Zwierzat w Krako
 
 Full data model diagram:  
 https://whimsical.com/schroniska-pl-data-model-3mqBXmW3VFmNsFm69EkKYb@5QtYEQ3Nz4jB5ZcJh
+- Voivodeship → County → Municipality → Shelter
 
+Example (from `data/shelters.json`):
+
+- Małopolskie → Kraków → Kraków → Schronisko dla Bezdomnych Zwierząt w Krakowie (`id: krk-1`)
+
+You can view the full data model diagram here:
+
+[View Whimsical diagram](https://whimsical.com/schroniska-pl-data-model-3mqBXmW3VFmNsFm69EkKYb@5QtYEQ3Nz4jB5ZcJh)
 ## ▶️ Run the Backend
 To start the API locally:
 node backend/server.js
@@ -51,3 +59,33 @@ Planned extensions include:
 - Integration with external shelter APIs
 
 Project created and maintained by MieterskiAI.
+## Import CSV (automatyczny)
+
+Projekt zawiera skrypt `backend/importCsv.js`, który automatycznie importuje pliki CSV do hierarchicznego formatu `data/shelters.json` (województwo → powiat → gmina → schroniska).
+
+### Jak użyć:
+1. Uruchom komendę:
+```bash
+node backend/importCsv.js "/pełna/ścieżka/do/pliku.csv"
+2. Skrypt automatycznie:
+- rozpoznaje nagłówki CSV (np. nazwa, adres, kod_pocztowy, województwo, powiat, gmina),
+- mapuje je do pól JSON,
+- dopisuje dane do odpowiednich regionów,
+- dodaje pola `_source` i `_importedAt` (śledzenie źródła).
+
+### Dlaczego to jest ważne:
+- nie trzeba ręcznie edytować JSON,
+- łatwo można dodawać dane z różnych źródeł,
+- system nadaje się do skalowania na kolejne województwa,
+- rekruter widzi realną automatyzację danych.
+**Przykład użycia:**
+
+```bash
+node backend/importCsv.js "/Users/maciejklimek/Schroniska-PL/data/schroniska_demo.csv"
+
+Po uruchomieniu:
+- dane zostaną wczytane,
+- automatycznie dopasowane do regionów,
+- zapisane do `data/shelters.json`,
+- pojawi się informacja `Import complete. Added: X`
+
