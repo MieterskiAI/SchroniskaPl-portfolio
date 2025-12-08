@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "csv-parser": "^3.2.0"
+    "csv-parser": "^3.2.0",
+    "express": "^5.2.1",
+    "libphonenumber-js": "^1.12.31",
+    "uuid": "^13.0.0"
   }
 }
