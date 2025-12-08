@@ -1,24 +1,24 @@
 {
   "voivodeships": [
     {
-      "name": "Małopolskie",
+      "name": "Malopolskie",
       "code": "MA",
       "counties": [
         {
-          "name": "Kraków",
+          "name": "Krakow",
           "municipalities": [
             {
-              "name": "Kraków",
+              "name": "Krakow",
               "shelters": [
                 {
                   "id": "krk-1",
-                  "name": "Schronisko dla Bezdomnych Zwierząt w Krakowie",
-                  "address": "ul. Rybna 3, 30-254 Kraków",
+                  "name": "Schronisko dla Bezdomnych Zwierzat w Krakowie",
+                  "address": "ul. Rybna 3, 30-254 Krakow",
                   "postalCode": "30-254",
-                  "city": "Kraków",
-                  "voivodeship": "Małopolskie",
-                  "county": "Kraków",
-                  "municipality": "Kraków",
+                  "city": "Krakow",
+                  "voivodeship": "Malopolskie",
+                  "county": "Krakow",
+                  "municipality": "Krakow",
                   "phone": "+48 12 429 92 41",
                   "email": "biuro@schronisko.krakow.pl",
                   "website": "https://www.schronisko.krakow.pl",
