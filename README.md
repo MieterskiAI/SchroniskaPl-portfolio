@@ -12,6 +12,20 @@ The backend exposes a very simple REST API:
 - `GET /api/shelters/:id` – returns a single shelter by its `id` (e.g. `krk-1`)  
 
 This API is powered by a minimal Node.js HTTP server reading from `data/shelters.json`.
+## 🗺 Data Model & Diagram
+
+The shelter data is stored in a hierarchical structure:
+
+- Voivodeship → County → Municipality → Shelter
+
+Example (from `data/shelters.json`):
+
+- Małopolskie → Kraków → Kraków → Schronisko dla Bezdomnych Zwierząt w Krakowie (`id: krk-1`)
+
+You can view the full data model diagram here:
+
+[View Whimsical diagram](https://whimsical.com/schroniska-pl-data-model-3mqBXmW3VFmNsFm69EkKYb@5QtYEQ3Nz4jB5ZcJh)
+
 ## ▶️ Run the Backend
 
 To start the API locally:
