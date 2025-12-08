@@ -33,3 +33,10 @@ To start the API locally:
 ```bash
 node backend/server.js
 http://localhost:3001
+## 📸 Screenshots
+
+### API — list of shelters
+![Shelters list](assets/api-shelters.png)
+
+### API — single shelter
+![Single shelter](assets/api-list.png)
