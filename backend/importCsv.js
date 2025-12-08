@@ -1,129 +1,201 @@
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
+const { randomUUID } = require('crypto');
+const { parsePhoneNumberFromString } = require('libphonenumber-js');
 
-const inputPath = process.argv[2] || path.join(__dirname, '..', 'data', 'schroniska_demo.csv');
-const sheltersJsonPath = path.join(__dirname, '..', 'data', 'shelters.json');
+if (!process.argv[2]) {
+  console.error('Usage: node backend/importCsv.js "/pełna/ścieżka/do/pliku.csv"');
+  process.exit(1);
+}
 
-function normalizeKey(k) {
-  if (!k) return '';
-  k = k.toString().trim().toLowerCase();
-  const map = {
-    name: ['name','nazwa','shelter','nazwa_schroniska'],
-    address: ['address','adres','ulica','street'],
-    postalCode: ['postalcode','kod','kod_pocztowy','postcode','zip'],
-    city: ['city','miasto','town'],
-    voivodeship: ['voivodeship','wojewodztwo','województwo','province','region'],
-    county: ['county','powiat','district'],
-    municipality: ['municipality','gmina','commune'],
-    phone: ['phone','telefon','tel'],
-    email: ['email','e-mail','mail'],
-    website: ['website','site','www','strona'],
-    lat: ['lat','latitude'],
-    lon: ['lon','lng','long','longitude'],
-    id: ['id','identifier']
-  };
-  for (const key in map) {
-    if (map[key].includes(k)) return key;
+const inputPath = process.argv[2];
+const results = [];
+const report = { added: 0, duplicates: 0, errors: 0, rows: 0 };
+
+// Mapowanie nazw województw do kanonicznych form
+const canonicalVoivodeships = {
+  "malopolskie": "Małopolskie",
+  "małopolskie": "Małopolskie",
+  "mazowieckie": "Mazowieckie",
+  "wielkopolskie": "Wielkopolskie",
+};
+
+// Normalizacja kodu pocztowego
+function normalizePostal(postal) {
+  if (!postal) return '';
+  const s = postal.trim();
+  const digits = s.replace(/\s+/g, '');
+  if (/^\d{2}-\d{3}$/.test(digits)) return digits;
+  if (/^\d{5}$/.test(digits)) return digits.slice(0, 2) + "-" + digits.slice(2);
+  return s;
+}
+
+// Normalizacja numeru telefonu
+function normalizePhone(raw) {
+  if (!raw) return '';
+  const p = raw.replace(/[^\d\+]/g, '');
+  try {
+    const parsed = parsePhoneNumberFromString(p, 'PL');
+    if (parsed && parsed.isValid()) return parsed.formatInternational();
+  } catch (e) {}
+  return raw.trim();
+}
+
+// Kanonizacja województwa
+function canonicalVoivode(v) {
+  if (!v) return '';
+  const key = v.toLowerCase().replace(/\s+/g, '');
+  return canonicalVoivodeships[key] || v;
+}
+
+// Trim string
+function normalizeStr(s) {
+  if (!s) return '';
+  return s.trim();
+}
+
+// Bezpieczne _source — tylko nazwa pliku
+function basenameSource(s) {
+  if (!s) return '';
+  try {
+    return path.basename(s);
+  } catch (e) {
+    return s;
   }
-  return k.replace(/\s+/g, '_');
 }
 
-function detectHeaderMap(headers) {
-  const map = {};
-  headers.forEach(h => map[h] = normalizeKey(h));
-  return map;
-}
+// Wczytaj istniejący shelters.json
+const dataFile = path.join(__dirname, "..", "data", "shelters.json");
+let existingData = { voivodeships: [] };
 
-function toFloat(v) {
-  const n = parseFloat((v||'').toString().replace(',', '.'));
-  return Number.isFinite(n) ? n : undefined;
-}
-
-function loadSheltersJson() {
-  if (!fs.existsSync(sheltersJsonPath)) return { voivodeships: [] };
-  return JSON.parse(fs.readFileSync(sheltersJsonPath, 'utf8'));
-}
-
-function saveSheltersJson(data) {
-  fs.writeFileSync(sheltersJsonPath, JSON.stringify(data, null, 2), 'utf8');
-  console.log('Saved', sheltersJsonPath);
-}
-
-function ensureVoivodeship(data, name) {
-  name = (name||'').trim() || 'Unknown';
-  let v = data.voivodeships.find(x => x.name.toLowerCase() === name.toLowerCase());
-  if (!v) { v = { name, code: '', counties: [] }; data.voivodeships.push(v); }
-  return v;
-}
-function ensureCounty(voiv, name) {
-  name = (name||'').trim() || 'Unknown';
-  let c = voiv.counties.find(x => x.name.toLowerCase() === name.toLowerCase());
-  if (!c) { c = { name, municipalities: [] }; voiv.counties.push(c); }
-  return c;
-}
-function ensureMunicipality(county, name) {
-  name = (name||'').trim() || 'Unknown';
-  let m = county.municipalities.find(x => x.name.toLowerCase() === name.toLowerCase());
-  if (!m) { m = { name, shelters: [] }; county.municipalities.push(m); }
-  return m;
-}
-
-(async () => {
-  if (!fs.existsSync(inputPath)) {
-    console.error("CSV not found at", inputPath);
-    process.exit(2);
+try {
+  if (fs.existsSync(dataFile)) {
+    existingData = JSON.parse(fs.readFileSync(dataFile, "utf8"));
   }
+} catch (e) {
+  console.warn("Could not read existing shelters.json, will create new.");
+}
 
-  const rows = [];
-  let headerMap = null;
-
-  await new Promise((resolve, reject) => {
-    fs.createReadStream(inputPath)
-      .pipe(csv())
-      .on('headers', headers => {
-        headerMap = detectHeaderMap(headers);
-        console.log("Detected headers:", headerMap);
-      })
-      .on('data', row => rows.push(row))
-      .on('end', resolve)
-      .on('error', reject);
+// Spłaszcz istniejące dane do mapy (do deduplikacji)
+const flatExisting = {};
+(function indexExisting() {
+  (existingData.voivodeships || []).forEach(v => {
+    (v.counties || []).forEach(c => {
+      (c.municipalities || []).forEach(m => {
+        m.shelters = m.shelters || [];
+        (m.shelters || []).forEach(s => {
+          const key = (s.name || '').toLowerCase().replace(/\s+/g, '') + "|" + (s.postalCode || '');
+          flatExisting[key] = s;
+        });
+      });
+    });
   });
+})();
 
-  const data = loadSheltersJson();
-  let count = 0;
+// Czytanie CSV
+fs.createReadStream(inputPath)
+  .pipe(csv())
+  .on("data", row => {
+    report.rows++;
 
-  for (const raw of rows) {
-    const rec = {};
+    try {
+      // Mapowanie nazw kolumn (różne warianty)
+      const name = row.name || row.nazwa || row.NAZWA || row["nazwa_schroniska"] || '';
+      const address = row.address || row.adres || '';
+      const postal = row.postalCode || row.kod_pocztowy || '';
+      const city = row.city || row.miejscowosc || '';
+      const voiv = row.voivodeship || row.wojewodztwo || '';
+      const county = row.county || row.powiat || '';
+      const municipality = row.municipality || row.gmina || '';
+      const phone = row.phone || row.telefon || '';
+      const email = row.email || row.mail || '';
+      const website = row.website || row.strona || '';
 
-    for (const key of Object.keys(raw)) {
-      rec[headerMap[key]] = raw[key].trim();
+      const normalizedPostal = normalizePostal(postal);
+      const normalizedPhone = normalizePhone(phone);
+      const normalizedVoiv = canonicalVoivode(voiv);
+
+      const shelter = {
+id: row.id && row.id.trim() ? row.id.trim() : randomUUID(),
+        name: normalizeStr(name),
+        address: normalizeStr(address),
+        postalCode: normalizedPostal,
+        city: normalizeStr(city),
+        voivodeship: normalizedVoiv,
+        county: normalizeStr(county),
+        municipality: normalizeStr(municipality),
+        phone: normalizedPhone,
+        email: normalizeStr(email),
+        website: normalizeStr(website),
+        location: null,
+        _importedAt: new Date().toISOString(),
+        _source: basenameSource(inputPath),
+      };
+
+      // Klucz do deduplikacji
+      const key = (shelter.name || "").toLowerCase().replace(/\s+/g, "") + "|" + (shelter.postalCode || "");
+
+      if (flatExisting[key]) {
+        report.duplicates++;
+      } else {
+        flatExisting[key] = shelter;
+        results.push(shelter);
+        report.added++;
+      }
+    } catch (err) {
+      console.error("Error parsing row", err);
+      report.errors++;
     }
+  })
+  .on("end", () => {
+    // Odtworzenie drzewa woj→powiat→gmina
+    const tree = {};
 
-    const voiv = ensureVoivodeship(data, rec.voivodeship);
-    const cnt = ensureCounty(voiv, rec.county);
-    const mun = ensureMunicipality(cnt, rec.municipality);
-
-    mun.shelters.push({
-      id: rec.id || `import-${Date.now()}-${count}`,
-      name: rec.name,
-      address: rec.address,
-      postalCode: rec.postalCode,
-      city: rec.city,
-      voivodeship: rec.voivodeship,
-      county: rec.county,
-      municipality: rec.municipality,
-      phone: rec.phone,
-      email: rec.email,
-      website: rec.website,
-      location: rec.lat && rec.lon ? { lat: Number(rec.lat), lon: Number(rec.lon) } : null,
-      _importedAt: new Date().toISOString(),
-      _source: inputPath
+    (existingData.voivodeships || []).forEach(v => {
+      tree[v.name] = v;
+      (v.counties || []).forEach(c => {
+        (c.municipalities || []).forEach(m => {
+          m.shelters = m.shelters || [];
+        });
+      });
     });
 
-    count++;
-  }
+    // Dodaj nowe wpisy
+    Object.values(flatExisting).forEach(shelter => {
+      const vName = shelter.voivodeship || "Unknown";
+      const cName = shelter.county || "Unknown";
+      const mName = shelter.municipality || "Unknown";
 
-  saveSheltersJson(data);
-  console.log("Import complete. Added:", count);
-})();
+      if (!tree[vName]) {
+        tree[vName] = { name: vName, code: "", counties: [] };
+      }
+
+      const voiv = tree[vName];
+
+      let county = voiv.counties.find(x => x.name === cName);
+      if (!county) {
+        county = { name: cName, municipalities: [] };
+        voiv.counties.push(county);
+      }
+
+      let mun = county.municipalities.find(x => x.name === mName);
+      if (!mun) {
+        mun = { name: mName, shelters: [] };
+        county.municipalities.push(mun);
+      }
+
+      if (!mun.shelters.find(x => x.id === shelter.id)) {
+        mun.shelters.push(shelter);
+      }
+    });
+
+    const output = { voivodeships: Object.values(tree) };
+    output.voivodeships.sort((a, b) => a.name.localeCompare(b.name));
+
+    fs.writeFileSync(dataFile, JSON.stringify(output, null, 2), "utf8");
+
+    console.log("Import complete. Report:", report);
+    console.log("Output written to", dataFile);
+  });
+

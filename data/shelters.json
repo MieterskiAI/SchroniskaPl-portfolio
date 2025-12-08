@@ -1,31 +1,33 @@
 {
   "voivodeships": [
     {
-      "name": "Malopolskie",
-      "code": "MA",
+      "name": "Lubelskie",
+      "code": "",
       "counties": [
         {
-          "name": "Krakow",
+          "name": "Lublin",
           "municipalities": [
             {
-              "name": "Krakow",
+              "name": "Lublin",
               "shelters": [
                 {
-                  "id": "krk-1",
-                  "name": "Schronisko dla Bezdomnych Zwierzat w Krakowie",
-                  "address": "ul. Rybna 3, 30-254 Krakow",
-                  "postalCode": "30-254",
-                  "city": "Krakow",
-                  "voivodeship": "Malopolskie",
-                  "county": "Krakow",
-                  "municipality": "Krakow",
-                  "phone": "+48 12 429 92 41",
-                  "email": "biuro@schronisko.krakow.pl",
-                  "website": "https://www.schronisko.krakow.pl",
+                  "id": "3c8dbfde-fd54-4b48-b1c8-9d9a1287b4ed",
+                  "name": "Schronisko w Lublinie",
+                  "address": "ul. Zielona 10",
+                  "postalCode": "20-001",
+                  "city": "Lublin",
+                  "voivodeship": "Lubelskie",
+                  "county": "Lublin",
+                  "municipality": "Lublin",
+                  "phone": "+48 81 234 56 78",
+                  "email": "biuro@lublin-schronisko.pl",
+                  "website": "https://lublin-schronisko.pl",
                   "location": {
-                    "lat": 50.082,
-                    "lon": 19.893
-                  }
+                    "lat": 51.250559,
+                    "lng": 22.5701022
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.986Z",
+                  "_source": "schroniska_demo.csv"
                 }
               ]
             }
@@ -34,51 +36,33 @@
       ]
     },
     {
-      "name": "Mazowieckie",
+      "name": "Łódzkie",
       "code": "",
       "counties": [
         {
-          "name": "Warszawa",
+          "name": "Łódź",
           "municipalities": [
             {
-              "name": "Warszawa",
+              "name": "Łódź",
               "shelters": [
                 {
-                  "id": "1",
-                  "name": "Schronisko dla Zwierząt w Warszawie",
-                  "address": "Paluch",
-                  "postalCode": "02-147",
-                  "voivodeship": "Mazowieckie",
-                  "county": "Warszawa",
-                  "municipality": "Warszawa",
-                  "phone": "+48228461199",
-                  "email": "biuro@paluch.org.pl",
-                  "website": "https://paluch.org.pl",
-                  "location": null,
-                  "_importedAt": "2025-12-08T13:34:47.630Z",
-                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska_demo.csv"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Unknown",
-          "municipalities": [
-            {
-              "name": "Unknown",
-              "shelters": [
-                {
-                  "id": "1",
-                  "name": "Schronisko w Warszawie",
-                  "address": "ul. Paluch 2",
-                  "postalCode": "02-147",
-                  "voivodeship": "Mazowieckie",
-                  "phone": "22 868 06 34",
-                  "email": "kontakt@paluch.pl",
-                  "location": null,
-                  "_importedAt": "2025-12-08T13:36:48.571Z",
-                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska.csv"
+                  "id": "0d027b42-d1cc-49c8-9c16-617c8ba10465",
+                  "name": "Schronisko w Łodzi",
+                  "address": "ul. Spacerowa 8",
+                  "postalCode": "90-001",
+                  "city": "Łódź",
+                  "voivodeship": "Łódzkie",
+                  "county": "Łódź",
+                  "municipality": "Łódź",
+                  "phone": "+48 42 123 45 67",
+                  "email": "info@lodz-schronisko.pl",
+                  "website": "https://lodz-schronisko.pl",
+                  "location": {
+                    "lat": 51.7728245,
+                    "lng": 19.4784857
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.986Z",
+                  "_source": "schroniska_demo.csv"
                 }
               ]
             }
@@ -97,19 +81,93 @@
               "name": "Kraków",
               "shelters": [
                 {
-                  "id": "2",
-                  "name": "Schronisko w Krakowie",
-                  "address": "Rybna",
-                  "postalCode": "30-001",
+                  "id": "ade847de-e4ea-4367-9d10-0d38867db3a9",
+                  "name": "Schronisko dla Zwierząt w Krakowie",
+                  "address": "ul. Karmelicka 12",
+                  "postalCode": "31-133",
+                  "city": "Kraków",
                   "voivodeship": "Małopolskie",
                   "county": "Kraków",
                   "municipality": "Kraków",
-                  "phone": "+48123456789",
-                  "email": "biuro@schroniskokrakow.pl",
-                  "website": "https://schroniskokrakow.pl",
-                  "location": null,
-                  "_importedAt": "2025-12-08T13:34:47.630Z",
-                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska_demo.csv"
+                  "phone": "+48 12 345 67 89",
+                  "email": "kontakt@krakowskie-schronisko.pl",
+                  "website": "https://krakowskie-schronisko.pl",
+                  "location": {
+                    "lat": 50.0469432,
+                    "lng": 19.9971534
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.985Z",
+                  "_source": "schroniska_demo.csv"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mazowieckie",
+      "code": "",
+      "counties": [
+        {
+          "name": "Warszawa",
+          "municipalities": [
+            {
+              "name": "Warszawa",
+              "shelters": [
+                {
+                  "id": "28c16639-9f56-4e36-a860-5636ca2688ae",
+                  "name": "Schronisko na Paluchu",
+                  "address": "ul. Paluch 2",
+                  "postalCode": "02-147",
+                  "city": "Warszawa",
+                  "voivodeship": "Mazowieckie",
+                  "county": "Warszawa",
+                  "municipality": "Warszawa",
+                  "phone": "+48 22 846 11 99",
+                  "email": "biuro@napaluchu.pl",
+                  "website": "https://napaluchu.pl",
+                  "location": {
+                    "lat": 52.2333742,
+                    "lng": 21.0711489
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.985Z",
+                  "_source": "schroniska_demo.csv"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Unknown",
+      "code": "",
+      "counties": [
+        {
+          "name": "Unknown",
+          "municipalities": [
+            {
+              "name": "Unknown",
+              "shelters": [
+                {
+                  "id": "85277f3c-2793-49a9-a50d-204b45cc5ca8",
+                  "name": "",
+                  "address": "",
+                  "postalCode": "",
+                  "city": "",
+                  "voivodeship": "",
+                  "county": "",
+                  "municipality": "",
+                  "phone": "",
+                  "email": "",
+                  "website": "",
+                  "location": {
+                    "lat": 52.215933,
+                    "lng": 19.134422
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.986Z",
+                  "_source": "schroniska_demo.csv"
                 }
               ]
             }
@@ -122,22 +180,64 @@
       "code": "",
       "counties": [
         {
-          "name": "Unknown",
+          "name": "Poznań",
           "municipalities": [
             {
-              "name": "Unknown",
+              "name": "Poznań",
               "shelters": [
                 {
-                  "id": "2",
+                  "id": "86772d58-9d8f-4731-8a09-9f781eefe6e9",
                   "name": "Schronisko w Poznaniu",
-                  "address": "ul. Kobylepole 23",
-                  "postalCode": "61-312",
+                  "address": "ul. Długa 99",
+                  "postalCode": "60-001",
+                  "city": "Poznań",
                   "voivodeship": "Wielkopolskie",
-                  "phone": "61 879 84 27",
-                  "email": "info@poznan.schronisko.pl",
-                  "location": null,
-                  "_importedAt": "2025-12-08T13:36:48.571Z",
-                  "_source": "/Users/maciejklimek/Schroniska-PL/data/schroniska.csv"
+                  "county": "Poznań",
+                  "municipality": "Poznań",
+                  "phone": "+48 600 111 222",
+                  "email": "info@poznanskieschronisko.pl",
+                  "website": "https://poznanskieschronisko.pl",
+                  "location": {
+                    "lat": 52.4082663,
+                    "lng": 16.9335199
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.985Z",
+                  "_source": "schroniska_demo.csv"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Zachodniopomorskie",
+      "code": "",
+      "counties": [
+        {
+          "name": "Koszalin",
+          "municipalities": [
+            {
+              "name": "Koszalin",
+              "shelters": [
+                {
+                  "id": "66f1c10a-9592-4f74-881e-b13f04214bf2",
+                  "name": "Schronisko w Koszalinie",
+                  "address": "ul. Leśna 5",
+                  "postalCode": "75-001",
+                  "city": "Koszalin",
+                  "voivodeship": "Zachodniopomorskie",
+                  "county": "Koszalin",
+                  "municipality": "Koszalin",
+                  "phone": "+48 94 123 45 67",
+                  "email": "kontakt@koszalin-schronisko.pl",
+                  "website": "https://koszalin-schronisko.pl",
+                  "location": {
+                    "lat": 54.2071799,
+                    "lng": 16.2175411
+                  },
+                  "_importedAt": "2025-12-08T16:21:50.986Z",
+                  "_source": "schroniska_demo.csv"
                 }
               ]
             }
