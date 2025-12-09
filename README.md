@@ -148,3 +148,16 @@ This project is ideal for an entry-level AI/Software Engineering portfolio becau
 
 ---
 
+## 📸 Screenshots
+
+### API – lista schronisk (`GET /api/shelters`)
+![Shelters API](./assets/screenshots/api-shelters.png)
+
+### API – drzewo administracyjne (`GET /api/tree`)
+![Tree API](./assets/screenshots/api-tree.png)
+
+### API – najbliższe schronisko (`GET /api/nearest`)
+![Nearest API](./assets/screenshots/api-nearest.png)
+
+### Frontend – wyszukiwarka schronisk
+![Frontend UI](./assets/screenshots/frontend-main.png)

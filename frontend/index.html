@@ -1,17 +1,545 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Schroniska PL – wyszukiwarka schronisk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #0f172a;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      border: 1px solid #1f2937;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      min-width: 220px;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #6b7280;
+    }
+
+    button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #111827;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #1f2937;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .list {
+      max-height: 480px;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      background: #020617;
+    }
+
+    .list-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid #111827;
+      cursor: pointer;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:hover {
+      background: #111827;
+    }
+
+    .list-item.active {
+      background: #1d2837;
+    }
+
+    .list-title {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .list-meta {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .empty {
+      padding: 12px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    .details h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .details dl {
+      margin: 0;
+    }
+
+    .details dt {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-top: 8px;
+    }
+
+    .details dd {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      font-size: 11px;
+      color: #9ca3af;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    .debug {
+      margin-top: 16px;
+      font-size: 12px;
+    }
+
+    .debug details {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 8px 10px;
+    }
+
+    .debug summary {
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    pre {
+      background: #020617;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 11px;
+      color: #d1d5db;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
 <body>
-<h1>Schroniska PL</h1>
-<input id="postal" placeholder="00-001">
-<button onclick="search()">Szukaj</button>
-<pre id="out"></pre>
-<script>
-async function search() {
-  const postal = document.getElementById("postal").value;
-  const r = await fetch("/api/shelters?postal=" + postal);
-  const data = await r.json();
-  document.getElementById("out").textContent = JSON.stringify(data, null, 2);
-}
-</script>
+  <div class="app">
+    <div class="card">
+      <header style="margin-bottom: 12px;">
+        <h1>Schroniska PL</h1>
+        <p class="status" id="status">Ładuję listę schronisk z API…</p>
+      </header>
+
+      <div class="toolbar">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Szukaj po nazwie, mieście lub kodzie pocztowym…"
+        />
+        <button id="btn-clear">Wyczyść filtr</button>
+        <button id="btn-reload">Przeładuj dane z API</button>
+      </div>
+
+      <div class="layout">
+        <section>
+          <h2 style="font-size: 14px; margin: 0 0 6px 0; color: #9ca3af;">
+            Lista schronisk
+          </h2>
+          <div id="shelters-list" class="list">
+            <div class="empty">Ładowanie…</div>
+          </div>
+        </section>
+
+        <section class="details">
+          <h2>Szczegóły schroniska</h2>
+          <div id="shelter-details" class="empty">
+            Wybierz schronisko z listy, aby zobaczyć szczegóły.
+          </div>
+        </section>
+      </div>
+
+      <section class="debug">
+        <details>
+          <summary>Podgląd surowej odpowiedzi API (/api/shelters)</summary>
+          <button id="btn-debug-load" style="margin: 8px 0;">Pobierz dane</button>
+          <pre id="debug-output">// kliknij „Pobierz dane”, aby zobaczyć JSON</pre>
+        </details>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3000';
+
+    let allShelters = [];
+    let activeId = null;
+
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error('Błąd HTTP ' + res.status + ' podczas pobierania ' + url);
+      }
+      return res.json();
+    }
+
+    async function loadShelters() {
+      setStatus('Ładuję listę schronisk z API…');
+      try {
+        const data = await fetchJson(API_BASE_URL + '/api/shelters');
+        allShelters = Array.isArray(data) ? data : [];
+        renderSheltersList(allShelters);
+        setStatus('Załadowano ' + allShelters.length + ' schronisk.');
+      } catch (err) {
+        console.error(err);
+        renderError('Nie udało się pobrać listy schronisk z API.');
+      }
+    }
+
+    function renderSheltersList(list) {
+      const container = document.getElementById('shelters-list');
+      container.innerHTML = '';
+
+      if (!list || list.length === 0) {
+        container.innerHTML =
+          '<div class="empty">Brak schronisk do wyświetlenia.</div>';
+        return;
+      }
+
+      list.forEach((shelter) => {
+        const item = document.createElement('div');
+        item.className = 'list-item' + (shelter.id === activeId ? ' active' : '');
+        item.dataset.id = shelter.id;
+
+        const title = document.createElement('div');
+        title.className = 'list-title';
+        title.textContent = shelter.name || 'Nieznana nazwa';
+
+        const meta = document.createElement('div');
+        meta.className = 'list-meta';
+        const city = shelter.city || 'brak miasta';
+        const postal = shelter.postalCode || '—';
+        const voiv = shelter.voivodeship || '';
+        meta.textContent =
+          city + ' • ' + postal + (voiv ? ' • ' + voiv : '');
+
+        item.appendChild(title);
+        item.appendChild(meta);
+
+        item.addEventListener('click', () => {
+          activeId = shelter.id;
+          highlightActiveItem();
+          showShelterDetails(shelter.id);
+        });
+
+        container.appendChild(item);
+      });
+    }
+
+    function highlightActiveItem() {
+      const items = document.querySelectorAll('.list-item');
+      items.forEach((el) => {
+        if (el.dataset.id === activeId) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+    }
+
+    async function showShelterDetails(id) {
+      const detailsContainer = document.getElementById('shelter-details');
+      detailsContainer.innerHTML =
+        '<div class="empty">Ładuję dane schroniska…</div>';
+
+      try {
+        const shelter = await fetchJson(
+          API_BASE_URL + '/api/shelters/' + encodeURIComponent(id)
+        );
+        renderShelterDetails(shelter);
+      } catch (err) {
+        console.error(err);
+        detailsContainer.innerHTML =
+          '<div class="empty">Nie udało się pobrać szczegółów schroniska.</div>';
+      }
+    }
+
+    function renderShelterDetails(s) {
+      if (!s) {
+        document.getElementById('shelter-details').innerHTML =
+          '<div class="empty">Brak danych o schronisku.</div>';
+        return;
+      }
+
+      const partsAddress = [];
+      if (s.address) partsAddress.push(s.address);
+      if (s.postalCode || s.city) {
+        partsAddress.push(
+          [s.postalCode, s.city].filter(Boolean).join(' ')
+        );
+      }
+
+      const addressLine = partsAddress.join(', ');
+
+      const tags = [];
+      if (s.voivodeship) {
+        tags.push(
+          '<span class="badge">Woj.: ' +
+            escapeHtml(s.voivodeship) +
+            '</span>'
+        );
+      }
+      if (s.county) {
+        tags.push(
+          '<span class="badge">Powiat: ' +
+            escapeHtml(s.county) +
+            '</span>'
+        );
+      }
+      if (s.municipality) {
+        tags.push(
+          '<span class="badge">Gmina: ' +
+            escapeHtml(s.municipality) +
+            '</span>'
+        );
+      }
+
+      const phone = s.phone ? escapeHtml(s.phone) : 'brak';
+      const email = s.email
+        ? '<a href="mailto:' +
+          escapeAttr(s.email) +
+          '">' +
+          escapeHtml(s.email) +
+          '</a>'
+        : 'brak';
+      const website = s.website
+        ? '<a href="' +
+          escapeAttr(s.website) +
+          '" target="_blank" rel="noopener noreferrer">' +
+          escapeHtml(s.website) +
+          '</a>'
+        : 'brak';
+
+      let locationText = 'brak';
+      if (
+        s.location &&
+        typeof s.location.lat === 'number' &&
+        typeof s.location.lng === 'number'
+      ) {
+        locationText =
+          s.location.lat.toFixed(6) +
+          ', ' +
+          s.location.lng.toFixed(6);
+      }
+
+      document.getElementById('shelter-details').innerHTML = `
+      <h2>${escapeHtml(s.name || 'Schronisko')}</h2>
+      <div style="margin-bottom:8px;">${tags.join(' ')}</div>
+      <dl>
+        <dt>Adres</dt>
+        <dd>${addressLine ? escapeHtml(addressLine) : 'brak'}</dd>
+
+        <dt>Telefon</dt>
+        <dd>${phone}</dd>
+
+        <dt>E-mail</dt>
+        <dd>${email}</dd>
+
+        <dt>Strona WWW</dt>
+        <dd>${website}</dd>
+
+        <dt>Współrzędne</dt>
+        <dd>${locationText}</dd>
+      </dl>
+      `;
+    }
+
+    function applyFilter(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        renderSheltersList(allShelters);
+        setStatus('Załadowano ' + allShelters.length + ' schronisk.');
+        return;
+      }
+
+      const filtered = allShelters.filter((s) => {
+        const name = (s.name || '').toLowerCase();
+        const city = (s.city || '').toLowerCase();
+        const postal = (s.postalCode || '').toLowerCase();
+        return (
+          name.includes(q) ||
+          city.includes(q) ||
+          postal.includes(q)
+        );
+      });
+
+      renderSheltersList(filtered);
+      setStatus(
+        'Filtr: "' +
+          q +
+          '" — znaleziono ' +
+          filtered.length +
+          ' schronisk.'
+      );
+    }
+
+    function setStatus(msg) {
+      const el = document.getElementById('status');
+      if (el) el.textContent = msg;
+    }
+
+    function renderError(msg) {
+      setStatus(msg);
+      const container = document.getElementById('shelters-list');
+      if (container) {
+        container.innerHTML =
+          '<div class="empty">' + escapeHtml(msg) + '</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return String(str)
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('search-input');
+      const btnClear = document.getElementById('btn-clear');
+      const btnReload = document.getElementById('btn-reload');
+      const btnDebug = document.getElementById('btn-debug-load');
+      const debugOutput = document.getElementById('debug-output');
+
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          applyFilter(e.target.value);
+        });
+      }
+
+      if (btnClear) {
+        btnClear.addEventListener('click', () => {
+          if (searchInput) {
+            searchInput.value = '';
+          }
+          applyFilter('');
+        });
+      }
+
+      if (btnReload) {
+        btnReload.addEventListener('click', () => {
+          loadShelters();
+        });
+      }
+
+      if (btnDebug && debugOutput) {
+        btnDebug.addEventListener('click', async () => {
+          debugOutput.textContent = 'Ładuję…';
+          try {
+            const data = await fetchJson(
+              API_BASE_URL + '/api/shelters'
+            );
+            const arr = Array.isArray(data) ? data : [data];
+            debugOutput.textContent = JSON.stringify(
+              arr.slice(0, 5),
+              null,
+              2
+            );
+          } catch (err) {
+            console.error(err);
+            debugOutput.textContent =
+              'Błąd podczas pobierania danych z API.';
+          }
+        });
+      }
+
+      loadShelters();
+    });
+  </script>
 </body>
 </html>
