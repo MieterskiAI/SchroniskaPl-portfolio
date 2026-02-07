@@ -1,6 +1,23 @@
 # Schroniska PL – projekt portfolio
 
-Aplikacja pomagająca znaleźć schroniska dla zwierząt w Polsce.  
+Portfolio z obszaru Operations / Reporting / Data Quality na danych o schroniskach dla zwierząt w Polsce.  
+
+**TL;DR (scope)**  
+- CSV → JSON ETL z czyszczeniem i walidacją danych,  
+- REST API w Node.js (Express),  
+- minimalistyczny frontend (HTML/JS) z filtrami i prostymi statystykami.  
+
+---
+
+## Suggested GitHub About & Topics
+
+- **GitHub About (1 line):** CSV→JSON ETL + data cleaning + Node/Express REST API + minimal frontend (filters/stats) for PL animal shelters.
+- **Topics (tags):** nodejs, express, rest-api, etl, data-cleaning, data-quality, csv, json, javascript, portfolio
+
+*Note: About/Topics are set in the GitHub UI (not via git).*
+
+---
+
 Projekt pokazuje pełny przepływ danych:
 
 - import z plików CSV,
@@ -112,18 +129,18 @@ http://localhost:3000
 - zawiera normalizację i walidację danych  
 - implementuje REST API z realnymi endpointami  
 - działa lokalnie bez zewnętrznych usług  
-- łatwy do rozbudowy (np. panel admina, baza danych, filtrowanie, mapa interaktywna)
+- dobrze pasuje do portfolio Operations / Reporting / Data Quality
 
 ---
 
 ## EN – Short project description
 
-**Schroniska PL** is a portfolio project demonstrating:
+**Schroniska PL** is an Operations / Reporting / Data Quality portfolio project demonstrating:
 
 - importing and normalizing shelter data from CSV,
 - building a hierarchical structure (voivodeship → county → municipality → shelter),
 - exposing a clean REST API in Node.js (Express),
-- a minimal HTML/JS frontend consuming the API,
+- a minimal HTML/JS frontend consuming the API (filters/stats),
 - data validation, cleanup and structure building,
 - simple geolocation-based nearest-shelter search.
 
@@ -140,7 +157,7 @@ The API will be available at:
 http://localhost:3000
 ```
 
-This project is ideal for an entry-level AI/Software Engineering portfolio because it shows:
+This project is aligned with an Operations / Reporting / Data Quality portfolio because it shows:
 
 - data ingestion & transformation,
 - backend architecture with real endpoints,
