@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "node backend/server.js",
-    "import:csv": "node backend/importCsv.js"
+    "import:csv": "node backend/importCsv.js",
+    "lint": "node --check backend/server.js backend/importCsv.js backend/geocode.js backend/utils/*.js",
+    "test": "node --test"
   },
   "dependencies": {
     "csv-parser": "^3.2.0",
@@ -15,4 +17,3 @@
     "uuid": "^13.0.0"
   }
 }
-
