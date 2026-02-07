@@ -56,9 +56,11 @@ Najważniejsze pliki:
 Domyślnie serwer działa na porcie `3000`.
 
 - `GET /api/tree` – pełne drzewo regionów  
-- `GET /api/shelters` – płaska lista wszystkich schronisk  
+- `GET /api/shelters` – płaska lista wszystkich schronisk (opcjonalnie `?voivodeship=&county=`)  
 - `GET /api/shelters/:id` – szczegóły pojedynczego schroniska  
 - `GET /api/nearest?lat=...&lng=...` – najbliższe schronisko dla podanych współrzędnych  
+- `GET /api/regions` – lista województw i powiatów do filtrów  
+- `GET /api/meta` – metadane (timestamp, liczba schronisk)  
 
 ---
 
@@ -161,3 +163,31 @@ This project is ideal for an entry-level AI/Software Engineering portfolio becau
 
 ### Frontend – wyszukiwarka schronisk
 ![Frontend UI](./assets/screenshots/frontend-main.png)
+
+---
+
+## Architektura (diagram)
+
+```mermaid
+graph LR
+  CSV[CSV] --> Import[Import CSV]
+  Import --> JSON[data/shelters.json]
+  JSON --> API[Node/Express API]
+  API --> Frontend[HTML/JS Frontend]
+```
+
+---
+
+## Roadmap
+
+- UX: statystyki, filtry regionów, paginacja / „load more”.
+- Dokumentacja: krótki audit + roadmap w jednym miejscu.
+- Jakość: CI (npm ci + lint/test jeśli są).
+
+Więcej szczegółów: [docs/portfolio_audit.md](./docs/portfolio_audit.md)
+
+---
+
+## Audit portfolio (TL;DR)
+
+Skrócony przegląd mocnych stron i rekomendacji: [docs/portfolio_audit.md](./docs/portfolio_audit.md)

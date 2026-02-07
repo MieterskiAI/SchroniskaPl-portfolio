@@ -8,6 +8,7 @@ const PORT = 3000;
 // Wczytujemy shelters.json (drzewo województwo → powiat → gmina → schroniska)
 const dataFile = path.join(__dirname, '..', 'data', 'shelters.json');
 let tree = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+const dataFileStats = fs.statSync(dataFile);
 
 // Flatten — zamienia całe drzewo na jedną tablicę schronisk
 function flattenShelters(tree) {
@@ -33,6 +34,27 @@ function flattenShelters(tree) {
 
 const shelters = flattenShelters(tree);
 
+function buildRegions(tree) {
+  return tree.voivodeships.map((voivodeship) => ({
+    name: voivodeship.name,
+    counties: voivodeship.counties.map((county) => county.name)
+  }));
+}
+
+const regions = buildRegions(tree);
+const voivodeshipSet = new Set(regions.map((region) => region.name));
+const countyIndex = regions.reduce((acc, region) => {
+  acc[region.name] = new Set(region.counties);
+  return acc;
+}, {});
+
+function getMetadata() {
+  return {
+    updatedAt: dataFileStats.mtime.toISOString(),
+    totalShelters: shelters.length
+  };
+}
+
 // CORS + JSON
 app.use(express.json());
 app.use((req, res, next) => {
@@ -52,7 +74,44 @@ app.get('/api/tree', (req, res) => {
 
 // 2. Lista WSZYSTKICH schronisk (flatten)
 app.get('/api/shelters', (req, res) => {
-  res.json(shelters);
+  const { voivodeship, county, ...rest } = req.query;
+
+  if (Object.keys(rest).length > 0) {
+    return res.status(400).json({
+      error: 'Nieobsługiwane parametry zapytania',
+      details: Object.keys(rest)
+    });
+  }
+
+  if (county && !voivodeship) {
+    return res.status(400).json({
+      error: 'Parametr county wymaga podania voivodeship'
+    });
+  }
+
+  if (voivodeship && !voivodeshipSet.has(voivodeship)) {
+    return res.status(400).json({
+      error: 'Nieznane województwo',
+      value: voivodeship
+    });
+  }
+
+  if (county && !countyIndex[voivodeship]?.has(county)) {
+    return res.status(400).json({
+      error: 'Nieznany powiat dla wskazanego województwa',
+      value: county
+    });
+  }
+
+  let results = shelters;
+  if (voivodeship) {
+    results = results.filter((s) => s.voivodeship === voivodeship);
+  }
+  if (county) {
+    results = results.filter((s) => s.county === county);
+  }
+
+  res.json(results);
 });
 
 // 3. Pojedyncze schronisko po ID
@@ -97,7 +156,19 @@ app.get('/api/nearest', (req, res) => {
   res.json(nearest ? nearest.sh : { error: "Brak schronisk z lokalizacją" });
 });
 
+// 6. Regiony do filtrów (województwa + powiaty)
+app.get('/api/regions', (req, res) => {
+  res.json({
+    updatedAt: getMetadata().updatedAt,
+    voivodeships: regions
+  });
+});
+
+// 7. Metadane (timestamp, liczba schronisk)
+app.get('/api/meta', (req, res) => {
+  res.json(getMetadata());
+});
+
 app.listen(PORT, () =>
   console.log(`🔥 SchroniskaPL API działa na http://localhost:${PORT}`)
 );
-

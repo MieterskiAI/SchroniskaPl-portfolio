@@ -53,6 +53,21 @@
       font-size: 14px;
     }
 
+    select {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      min-width: 200px;
+      font-size: 14px;
+    }
+
+    select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     input::placeholder {
       color: #6b7280;
     }
@@ -117,6 +132,60 @@
     .list-meta {
       font-size: 12px;
       color: #9ca3af;
+    }
+
+    .list-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .list-footer button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 8px 0 16px;
+    }
+
+    .stat-card {
+      background: #0b1220;
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      padding: 12px 14px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #111827;
+      font-size: 12px;
+      color: #cbd5f5;
     }
 
     .empty {
@@ -208,12 +277,39 @@
         <p class="status" id="status">Ładuję listę schronisk z API…</p>
       </header>
 
+      <div class="summary">
+        <div class="stat-card">
+          <div class="stat-label">Schroniska łącznie</div>
+          <div class="stat-value" id="stat-total">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Wyniki filtra</div>
+          <div class="stat-value" id="stat-filtered">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ostatnie odświeżenie</div>
+          <div class="stat-value" id="stat-updated">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Źródło danych</div>
+          <div class="stat-value">
+            <span class="pill">API lokalne :3000</span>
+          </div>
+        </div>
+      </div>
+
       <div class="toolbar">
         <input
           type="text"
           id="search-input"
           placeholder="Szukaj po nazwie, mieście lub kodzie pocztowym…"
         />
+        <select id="voivodeship-filter">
+          <option value="">Wszystkie województwa</option>
+        </select>
+        <select id="county-filter" disabled>
+          <option value="">Wszystkie powiaty</option>
+        </select>
         <button id="btn-clear">Wyczyść filtr</button>
         <button id="btn-reload">Przeładuj dane z API</button>
       </div>
@@ -225,6 +321,10 @@
           </h2>
           <div id="shelters-list" class="list">
             <div class="empty">Ładowanie…</div>
+          </div>
+          <div class="list-footer">
+            <span id="list-counter">Wyświetlono 0 z 0</span>
+            <button id="btn-load-more" type="button">Załaduj więcej</button>
           </div>
         </section>
 
@@ -248,28 +348,103 @@
 
   <script>
     const API_BASE_URL = 'http://localhost:3000';
+    const PAGE_SIZE = 25;
 
     let allShelters = [];
+    let filteredShelters = [];
     let activeId = null;
+    let lastUpdated = null;
+    let totalShelters = 0;
+    let regionsData = [];
+    let visibleCount = 0;
+    const currentFilters = {
+      query: '',
+      voivodeship: '',
+      county: ''
+    };
 
     async function fetchJson(url) {
       const res = await fetch(url);
       if (!res.ok) {
-        throw new Error('Błąd HTTP ' + res.status + ' podczas pobierania ' + url);
+        let details = '';
+        try {
+          const payload = await res.json();
+          if (payload?.error) {
+            details = ': ' + payload.error;
+          }
+        } catch (err) {
+          details = '';
+        }
+        throw new Error(
+          'Błąd HTTP ' + res.status + details + ' podczas pobierania ' + url
+        );
       }
       return res.json();
     }
 
-    async function loadShelters() {
-      setStatus('Ładuję listę schronisk z API…');
+    async function fetchMeta() {
       try {
-        const data = await fetchJson(API_BASE_URL + '/api/shelters');
-        allShelters = Array.isArray(data) ? data : [];
-        renderSheltersList(allShelters);
-        setStatus('Załadowano ' + allShelters.length + ' schronisk.');
+        const meta = await fetchJson(API_BASE_URL + '/api/meta');
+        if (meta && meta.updatedAt) {
+          lastUpdated = new Date(meta.updatedAt);
+        }
+        totalShelters = meta?.totalShelters ?? totalShelters;
+      } catch (err) {
+        console.warn('Nie udało się pobrać metadanych', err);
+        if (!lastUpdated) lastUpdated = new Date();
+      }
+    }
+
+    async function fetchRegions() {
+      try {
+        const payload = await fetchJson(API_BASE_URL + '/api/regions');
+        regionsData = Array.isArray(payload?.voivodeships)
+          ? payload.voivodeships
+          : [];
+        if (payload?.updatedAt) {
+          lastUpdated = new Date(payload.updatedAt);
+        }
+        buildVoivodeshipFilter();
       } catch (err) {
         console.error(err);
-        renderError('Nie udało się pobrać listy schronisk z API.');
+        setStatus('Nie udało się pobrać listy regionów z API.');
+      }
+    }
+
+    function buildSheltersUrl() {
+      const params = new URLSearchParams();
+      if (currentFilters.voivodeship) {
+        params.set('voivodeship', currentFilters.voivodeship);
+      }
+      if (currentFilters.county) {
+        params.set('county', currentFilters.county);
+      }
+      const query = params.toString();
+      return API_BASE_URL + '/api/shelters' + (query ? '?' + query : '');
+    }
+
+    async function loadShelters() {
+      setStatus('Ładuję listę schronisk z API…');
+      renderLoadingList();
+      try {
+        const data = await fetchJson(buildSheltersUrl());
+        allShelters = Array.isArray(data) ? data : [];
+        await fetchMeta();
+        applyFilter(currentFilters);
+      } catch (err) {
+        console.error(err);
+        renderError(
+          'Nie udało się pobrać listy schronisk z API. ' +
+            'Sprawdź, czy backend działa poprawnie. ' +
+            (err?.message ? '(' + err.message + ')' : '')
+        );
+      }
+    }
+
+    function renderLoadingList() {
+      const container = document.getElementById('shelters-list');
+      if (container) {
+        container.innerHTML = '<div class="empty">Ładowanie…</div>';
       }
     }
 
@@ -278,12 +453,22 @@
       container.innerHTML = '';
 
       if (!list || list.length === 0) {
+        const hasFilters =
+          currentFilters.query ||
+          currentFilters.voivodeship ||
+          currentFilters.county;
         container.innerHTML =
-          '<div class="empty">Brak schronisk do wyświetlenia.</div>';
+          '<div class="empty">' +
+          (hasFilters
+            ? 'Brak wyników dla podanych filtrów.'
+            : 'Brak schronisk do wyświetlenia.') +
+          '</div>';
+        updateStats(list || []);
+        updateListFooter();
         return;
       }
 
-      list.forEach((shelter) => {
+      list.slice(0, visibleCount).forEach((shelter) => {
         const item = document.createElement('div');
         item.className = 'list-item' + (shelter.id === activeId ? ' active' : '');
         item.dataset.id = shelter.id;
@@ -311,6 +496,9 @@
 
         container.appendChild(item);
       });
+
+      updateStats(list);
+      updateListFooter();
     }
 
     function highlightActiveItem() {
@@ -431,33 +619,25 @@
       `;
     }
 
-    function applyFilter(query) {
-      const q = query.trim().toLowerCase();
-      if (!q) {
-        renderSheltersList(allShelters);
-        setStatus('Załadowano ' + allShelters.length + ' schronisk.');
-        return;
-      }
-
+    function applyFilter(filters) {
+      const rawQuery = filters.query.trim();
+      const query = rawQuery.toLowerCase();
       const filtered = allShelters.filter((s) => {
         const name = (s.name || '').toLowerCase();
         const city = (s.city || '').toLowerCase();
         const postal = (s.postalCode || '').toLowerCase();
         return (
-          name.includes(q) ||
-          city.includes(q) ||
-          postal.includes(q)
+          !query ||
+          name.includes(query) ||
+          city.includes(query) ||
+          postal.includes(query)
         );
       });
 
-      renderSheltersList(filtered);
-      setStatus(
-        'Filtr: "' +
-          q +
-          '" — znaleziono ' +
-          filtered.length +
-          ' schronisk.'
-      );
+      filteredShelters = filtered;
+      resetPagination();
+      renderSheltersList(filteredShelters);
+      updateStatusLine(rawQuery, filteredShelters.length);
     }
 
     function setStatus(msg) {
@@ -471,6 +651,110 @@
       if (container) {
         container.innerHTML =
           '<div class="empty">' + escapeHtml(msg) + '</div>';
+      }
+      filteredShelters = [];
+      visibleCount = 0;
+      updateStats([]);
+      updateListFooter();
+    }
+
+    function updateStatusLine(query, count) {
+      const { voivodeship, county } = currentFilters;
+      if (!query && !voivodeship && !county) {
+        setStatus('Załadowano ' + allShelters.length + ' schronisk.');
+        return;
+      }
+
+      const parts = [];
+      if (query) parts.push('fraza "' + query + '"');
+      if (voivodeship) parts.push('woj. ' + voivodeship);
+      if (county) parts.push('powiat ' + county);
+
+      setStatus(
+        'Filtr: ' +
+          parts.join(', ') +
+          ' — znaleziono ' +
+          count +
+          ' schronisk.'
+      );
+    }
+
+    function updateStats(filtered) {
+      const totalEl = document.getElementById('stat-total');
+      const filteredEl = document.getElementById('stat-filtered');
+      const updatedEl = document.getElementById('stat-updated');
+
+      if (totalEl) totalEl.textContent = totalShelters || allShelters.length || '0';
+      if (filteredEl) filteredEl.textContent = filtered.length || '0';
+      if (updatedEl) {
+        updatedEl.textContent = lastUpdated
+          ? lastUpdated.toLocaleTimeString('pl-PL', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '—';
+      }
+    }
+
+    function buildVoivodeshipFilter() {
+      const voivodeships = regionsData
+        .map((region) => region.name)
+        .sort((a, b) => a.localeCompare(b, 'pl'));
+
+      const select = document.getElementById('voivodeship-filter');
+      if (!select) return;
+
+      select.innerHTML =
+        '<option value="">Wszystkie województwa</option>';
+      voivodeships.forEach((name) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+      select.disabled = voivodeships.length === 0;
+
+      updateCountyFilter();
+    }
+
+    function updateCountyFilter() {
+      const select = document.getElementById('county-filter');
+      if (!select) return;
+
+      const region = regionsData.find(
+        (item) => item.name === currentFilters.voivodeship
+      );
+      const counties = region
+        ? region.counties.slice().sort((a, b) => a.localeCompare(b, 'pl'))
+        : [];
+
+      select.innerHTML =
+        '<option value="">Wszystkie powiaty</option>';
+      counties.forEach((name) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+
+      select.disabled = counties.length === 0;
+    }
+
+    function resetPagination() {
+      visibleCount = Math.min(PAGE_SIZE, filteredShelters.length);
+    }
+
+    function updateListFooter() {
+      const counter = document.getElementById('list-counter');
+      const loadMoreBtn = document.getElementById('btn-load-more');
+      if (counter) {
+        counter.textContent =
+          'Wyświetlono ' + Math.min(visibleCount, filteredShelters.length) +
+          ' z ' + filteredShelters.length;
+      }
+      if (loadMoreBtn) {
+        loadMoreBtn.style.display =
+          filteredShelters.length > visibleCount ? 'inline-flex' : 'none';
       }
     }
 
@@ -495,10 +779,31 @@
       const btnReload = document.getElementById('btn-reload');
       const btnDebug = document.getElementById('btn-debug-load');
       const debugOutput = document.getElementById('debug-output');
+      const voivodeshipFilter = document.getElementById('voivodeship-filter');
+      const countyFilter = document.getElementById('county-filter');
+      const loadMoreBtn = document.getElementById('btn-load-more');
 
       if (searchInput) {
         searchInput.addEventListener('input', (e) => {
-          applyFilter(e.target.value);
+          currentFilters.query = e.target.value;
+          applyFilter(currentFilters);
+        });
+      }
+
+      if (voivodeshipFilter) {
+        voivodeshipFilter.addEventListener('change', (e) => {
+          currentFilters.voivodeship = e.target.value;
+          currentFilters.county = '';
+          if (countyFilter) countyFilter.value = '';
+          updateCountyFilter();
+          loadShelters();
+        });
+      }
+
+      if (countyFilter) {
+        countyFilter.addEventListener('change', (e) => {
+          currentFilters.county = e.target.value;
+          loadShelters();
         });
       }
 
@@ -507,13 +812,32 @@
           if (searchInput) {
             searchInput.value = '';
           }
-          applyFilter('');
+          currentFilters.query = '';
+          currentFilters.voivodeship = '';
+          currentFilters.county = '';
+          if (voivodeshipFilter) voivodeshipFilter.value = '';
+          if (countyFilter) {
+            countyFilter.value = '';
+            countyFilter.disabled = true;
+          }
+          loadShelters();
         });
       }
 
       if (btnReload) {
         btnReload.addEventListener('click', () => {
+          fetchRegions();
           loadShelters();
+        });
+      }
+
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+          visibleCount = Math.min(
+            visibleCount + PAGE_SIZE,
+            filteredShelters.length
+          );
+          renderSheltersList(filteredShelters);
         });
       }
 
@@ -521,9 +845,7 @@
         btnDebug.addEventListener('click', async () => {
           debugOutput.textContent = 'Ładuję…';
           try {
-            const data = await fetchJson(
-              API_BASE_URL + '/api/shelters'
-            );
+            const data = await fetchJson(buildSheltersUrl());
             const arr = Array.isArray(data) ? data : [data];
             debugOutput.textContent = JSON.stringify(
               arr.slice(0, 5),
@@ -538,6 +860,7 @@
         });
       }
 
+      fetchRegions();
       loadShelters();
     });
   </script>
