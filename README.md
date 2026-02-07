@@ -11,10 +11,10 @@ Portfolio z obszaru Operations / Reporting / Data Quality na danych o schroniska
 
 ## Suggested GitHub About & Topics
 
-- **GitHub About (1 line):** CSV→JSON ETL + data cleaning + Node/Express REST API + minimal frontend (filters/stats) for PL animal shelters.
-- **Topics (tags):** nodejs, express, rest-api, etl, data-cleaning, data-quality, csv, json, javascript, portfolio
+- **GitHub About (1 line):** ETL + API demo: import CSV→normalize→serve shelters via REST API with simple frontend filters (Node/Express).
+- **Topics (tags):** etl, data-cleaning, data-quality, nodejs, express, rest-api, csv, portfolio
 
-*Note: About/Topics are set in the GitHub UI (not via git).*
+*Note: set in GitHub UI (not via git).*
 
 ---
 
@@ -61,7 +61,7 @@ Najważniejsze pliki:
 
 - `backend/server.js` – główne API (Express)
 - `backend/importCsv.js` – import danych z CSV do JSON
-- `backend/utils/*` – funkcje pomocnicze (walidacja, EXIF, miniatury)
+- `backend/utils/*` – funkcje pomocnicze (walidacja, normalizacja, pomocniki geo, formatowanie)
 - `data/shelters.json` – główna baza danych API
 - `frontend/index.html` – demo frontendu
 - `package.json` – zależności i skrypty npm
