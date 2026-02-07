@@ -67,7 +67,7 @@ Domyślnie serwer działa na porcie `3000`.
 Do importu danych służy skrypt:
 
 ```bash
-node backend/importCsv.js "/pełna/ścieżka/do/pliku.csv"
+npm run import:csv -- "/pełna/ścieżka/do/pliku.csv"
 ```
 
 Wynik zapisywany jest do:
@@ -77,6 +77,10 @@ Wynik zapisywany jest do:
 ---
 
 ## Uruchomienie projektu lokalnie
+
+Wymagania:
+
+- Node.js 18+ (rekomendowane 20 LTS)
 
 1. Zainstaluj zależności:
 
@@ -101,6 +105,14 @@ http://localhost:3000
 - otwórz plik `frontend/index.html` w przeglądarce,
 - upewnij się, że backend działa (port 3000),
 - frontend automatycznie pobiera dane z API.
+
+## Skrypty npm
+
+- `npm start` – uruchamia API (backend)
+- `npm run dev` – alias do `start`
+- `npm run import:csv -- "/pełna/ścieżka/do/pliku.csv"` – import CSV → JSON
+- `npm run lint` – szybka kontrola składni JS
+- `npm test` – testy (Node.js `--test`)
 
 ---
 
